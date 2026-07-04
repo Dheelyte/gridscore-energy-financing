@@ -1,0 +1,2147 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GridScore AI API",
+    "summary": "Credit infrastructure for Africa's energy lenders.",
+    "description": "Cooperative PAYG repayment data platform. **All data in non-production environments is synthetic.**",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Liveness probe",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Readiness probe",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Log in (OAuth2 password flow)",
+        "operationId": "login_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_v1_auth_login_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Exchange a refresh token",
+        "operationId": "refresh_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Current principal",
+        "operationId": "me_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/operators": {
+      "get": {
+        "tags": [
+          "operators"
+        ],
+        "summary": "List operators",
+        "operationId": "list_operators_v1_operators_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OperatorOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Operators V1 Operators Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "operators"
+        ],
+        "summary": "Onboard an operator",
+        "operationId": "create_operator_v1_operators_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperatorCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperatorOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/operators/{operator_id}/api-keys": {
+      "post": {
+        "tags": [
+          "operators"
+        ],
+        "summary": "Issue a machine API key for an operator",
+        "operationId": "issue_api_key_v1_operators__operator_id__api_keys_post",
+        "parameters": [
+          {
+            "name": "operator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Operator Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/operators/users": {
+      "post": {
+        "tags": [
+          "operators"
+        ],
+        "summary": "Create a user account",
+        "operationId": "create_user_v1_operators_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "List this operator's customers",
+        "operationId": "list_customers_v1_customers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Customers V1 Customers Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers/{customer_id}": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Get a customer",
+        "operationId": "get_customer_v1_customers__customer_id__get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers/{customer_id}/consents": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "List a customer's consent records",
+        "operationId": "list_consents_v1_customers__customer_id__consents_get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConsentOut"
+                  },
+                  "title": "Response List Consents V1 Customers  Customer Id  Consents Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Record a consent grant/denial",
+        "operationId": "create_consent_v1_customers__customer_id__consents_post",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customers/{customer_id}/scores": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Score history for a customer",
+        "operationId": "score_history_v1_customers__customer_id__scores_get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScoreHistoryItem"
+                  },
+                  "title": "Response Score History V1 Customers  Customer Id  Scores Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/events": {
+      "post": {
+        "tags": [
+          "ingestion"
+        ],
+        "summary": "Ingest repayment events inline (validated, anonymised, idempotent)",
+        "operationId": "ingest_events_v1_ingest_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/batch": {
+      "post": {
+        "tags": [
+          "ingestion"
+        ],
+        "summary": "Upload a CSV/JSON batch (processed by the background worker)",
+        "operationId": "ingest_batch_upload_v1_ingest_batch_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_ingest_batch_upload_v1_ingest_batch_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/IngestResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/BatchAccepted"
+                    }
+                  ],
+                  "title": "Response Ingest Batch Upload V1 Ingest Batch Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "ingestion"
+        ],
+        "summary": "Batch job status",
+        "operationId": "job_status_v1_ingest_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/score": {
+      "post": {
+        "tags": [
+          "scoring"
+        ],
+        "summary": "Score a customer (solo or pooled view)",
+        "operationId": "score_v1_score_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/score/cooperative": {
+      "post": {
+        "tags": [
+          "scoring"
+        ],
+        "summary": "Cooperative lift: solo vs pooled, with the decision flip",
+        "operationId": "score_cooperative_v1_score_cooperative_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CooperativeScoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooperativeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/summary": {
+      "get": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Operator portfolio summary",
+        "operationId": "portfolio_summary_v1_portfolio_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/portfolio": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Cross-operator portfolio risk",
+        "operationId": "portfolio_v1_analytics_portfolio_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioAnalytics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/network-effect": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "AUC vs. number of pooled operators (real retraining; cached)",
+        "operationId": "network_effect_v1_analytics_network_effect_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkEffectResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/health": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Cooperative health",
+        "operationId": "health_v1_admin_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/audit": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Search the audit log",
+        "operationId": "audit_v1_admin_audit_get",
+        "parameters": [
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntry"
+                  },
+                  "title": "Response Audit V1 Admin Audit Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/model": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "The active scoring model",
+        "operationId": "active_model_v1_admin_model_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Service banner",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActiveModel": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Metrics"
+          },
+          "mlflow_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mlflow Run Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "threshold",
+          "metrics",
+          "mlflow_run_id",
+          "created_at"
+        ],
+        "title": "ActiveModel"
+      },
+      "ApiKeyCreated": {
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key",
+            "description": "Full key, shown once. Store it securely."
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": "This is the only time the full key is shown."
+          }
+        },
+        "type": "object",
+        "required": [
+          "prefix",
+          "api_key"
+        ],
+        "title": "ApiKeyCreated"
+      },
+      "AuditEntry": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "resource": {
+            "type": "string",
+            "title": "Resource"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "actor",
+          "action",
+          "resource",
+          "metadata",
+          "created_at"
+        ],
+        "title": "AuditEntry"
+      },
+      "BatchAccepted": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "received": {
+            "type": "integer",
+            "title": "Received"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "received"
+        ],
+        "title": "BatchAccepted"
+      },
+      "Body_ingest_batch_upload_v1_ingest_batch_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_ingest_batch_upload_v1_ingest_batch_post"
+      },
+      "Body_login_v1_auth_login_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^password$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "password",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_v1_auth_login_post"
+      },
+      "ConsentCreate": {
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/ConsentScope"
+          },
+          "granted": {
+            "type": "boolean",
+            "title": "Granted",
+            "default": true
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "Source",
+            "default": "api"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope"
+        ],
+        "title": "ConsentCreate"
+      },
+      "ConsentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ConsentScope"
+          },
+          "granted": {
+            "type": "boolean",
+            "title": "Granted"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "granted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Granted At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "scope",
+          "granted",
+          "source",
+          "granted_at",
+          "expires_at"
+        ],
+        "title": "ConsentOut"
+      },
+      "ConsentScope": {
+        "type": "string",
+        "enum": [
+          "data_sharing",
+          "enrichment",
+          "scoring"
+        ],
+        "title": "ConsentScope",
+        "description": "What a customer has consented to. Gates enrichment and scoring."
+      },
+      "CooperativeOut": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Customer Id"
+          },
+          "solo": {
+            "$ref": "#/components/schemas/ScoreOut"
+          },
+          "pooled": {
+            "$ref": "#/components/schemas/ScoreOut"
+          },
+          "pd_delta": {
+            "type": "number",
+            "title": "Pd Delta"
+          },
+          "confidence_delta": {
+            "type": "number",
+            "title": "Confidence Delta"
+          },
+          "score_delta": {
+            "type": "integer",
+            "title": "Score Delta"
+          },
+          "decision_flips": {
+            "type": "boolean",
+            "title": "Decision Flips"
+          },
+          "lift_metric": {
+            "type": "number",
+            "title": "Lift Metric"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "solo",
+          "pooled",
+          "pd_delta",
+          "confidence_delta",
+          "score_delta",
+          "decision_flips",
+          "lift_metric"
+        ],
+        "title": "CooperativeOut"
+      },
+      "CooperativeScoreRequest": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Customer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id"
+        ],
+        "title": "CooperativeScoreRequest"
+      },
+      "CustomerOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "identity_hash": {
+            "type": "string",
+            "title": "Identity Hash"
+          },
+          "home_operator_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Home Operator Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "identity_hash",
+          "home_operator_id",
+          "created_at"
+        ],
+        "title": "CustomerOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "operators": {
+            "type": "integer",
+            "title": "Operators"
+          },
+          "customers": {
+            "type": "integer",
+            "title": "Customers"
+          },
+          "repayment_events": {
+            "type": "integer",
+            "title": "Repayment Events"
+          },
+          "enrichment_signals": {
+            "type": "integer",
+            "title": "Enrichment Signals"
+          },
+          "scored_customers": {
+            "type": "integer",
+            "title": "Scored Customers"
+          },
+          "active_consents": {
+            "type": "integer",
+            "title": "Active Consents"
+          },
+          "cooperative_lifts": {
+            "type": "integer",
+            "title": "Cooperative Lifts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operators",
+          "customers",
+          "repayment_events",
+          "enrichment_signals",
+          "scored_customers",
+          "active_consents",
+          "cooperative_lifts"
+        ],
+        "title": "Health"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthState",
+            "description": "Overall liveness status."
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service identifier."
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Running application version."
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Active deployment environment."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment"
+        ],
+        "title": "HealthResponse"
+      },
+      "HealthState": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "degraded"
+        ],
+        "title": "HealthState"
+      },
+      "IngestEventsRequest": {
+        "properties": {
+          "events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "Raw repayment rows to ingest"
+          },
+          "enrich": {
+            "type": "boolean",
+            "title": "Enrich",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "IngestEventsRequest"
+      },
+      "IngestResponse": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/IngestionReport"
+          },
+          "customers_enriched": {
+            "type": "integer",
+            "title": "Customers Enriched"
+          },
+          "signals_written": {
+            "type": "integer",
+            "title": "Signals Written"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report",
+          "customers_enriched",
+          "signals_written"
+        ],
+        "title": "IngestResponse"
+      },
+      "IngestionReport": {
+        "properties": {
+          "received": {
+            "type": "integer",
+            "title": "Received",
+            "default": 0
+          },
+          "inserted": {
+            "type": "integer",
+            "title": "Inserted",
+            "default": 0
+          },
+          "duplicates": {
+            "type": "integer",
+            "title": "Duplicates",
+            "default": 0
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed",
+            "default": 0
+          },
+          "customers_created": {
+            "type": "integer",
+            "title": "Customers Created",
+            "default": 0
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/RowError"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "title": "IngestionReport"
+      },
+      "JobStatus": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "JobStatus"
+      },
+      "Me": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "subject_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Subject Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "operator_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "subject_id",
+          "role",
+          "operator_id"
+        ],
+        "title": "Me"
+      },
+      "NetworkEffectResponse": {
+        "properties": {
+          "points": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": "Empirical: the model is retrained for each cooperative size."
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "NetworkEffectResponse"
+      },
+      "OperatorCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "country": {
+            "type": "string",
+            "maxLength": 2,
+            "minLength": 2,
+            "title": "Country",
+            "description": "ISO 3166-1 alpha-2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "country"
+        ],
+        "title": "OperatorCreate"
+      },
+      "OperatorOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OperatorStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "country",
+          "status",
+          "created_at"
+        ],
+        "title": "OperatorOut"
+      },
+      "OperatorStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "active",
+          "suspended"
+        ],
+        "title": "OperatorStatus",
+        "description": "Lifecycle of a tenant (PAYG operator) in the cooperative."
+      },
+      "PortfolioAnalytics": {
+        "properties": {
+          "scored_customers": {
+            "type": "integer",
+            "title": "Scored Customers"
+          },
+          "average_default_probability": {
+            "type": "number",
+            "title": "Average Default Probability"
+          },
+          "approval_rate": {
+            "type": "number",
+            "title": "Approval Rate"
+          },
+          "pd_histogram": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Pd Histogram"
+          },
+          "tier_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Tier Distribution"
+          },
+          "operator_concentration": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Operator Concentration"
+          },
+          "newly_bankable_customers": {
+            "type": "integer",
+            "title": "Newly Bankable Customers"
+          },
+          "estimated_debt_capacity_unlocked_usd": {
+            "type": "number",
+            "title": "Estimated Debt Capacity Unlocked Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scored_customers",
+          "average_default_probability",
+          "approval_rate",
+          "pd_histogram",
+          "tier_distribution",
+          "operator_concentration",
+          "newly_bankable_customers",
+          "estimated_debt_capacity_unlocked_usd"
+        ],
+        "title": "PortfolioAnalytics"
+      },
+      "PortfolioSummary": {
+        "properties": {
+          "total_customers": {
+            "type": "integer",
+            "title": "Total Customers"
+          },
+          "scored_customers": {
+            "type": "integer",
+            "title": "Scored Customers"
+          },
+          "tier_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Tier Distribution"
+          },
+          "approval_rate": {
+            "type": "number",
+            "title": "Approval Rate"
+          },
+          "average_default_probability": {
+            "type": "number",
+            "title": "Average Default Probability"
+          },
+          "estimated_losses_avoided_usd": {
+            "type": "number",
+            "title": "Estimated Losses Avoided Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_customers",
+          "scored_customers",
+          "tier_distribution",
+          "approval_rate",
+          "average_default_probability",
+          "estimated_losses_avoided_usd"
+        ],
+        "title": "PortfolioSummary"
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthState",
+            "description": "Overall readiness status."
+          },
+          "dependencies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/HealthState"
+            },
+            "type": "object",
+            "title": "Dependencies",
+            "description": "Per-dependency readiness."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ReadinessResponse"
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshRequest"
+      },
+      "RiskTier": {
+        "type": "string",
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "title": "RiskTier",
+        "description": "Risk grade with documented PD cutoffs (defined in the scoring service)."
+      },
+      "RowError": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "message"
+        ],
+        "title": "RowError"
+      },
+      "ScoreHistoryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "view": {
+            "$ref": "#/components/schemas/ScoreView"
+          },
+          "energy_credit_score": {
+            "type": "integer",
+            "title": "Energy Credit Score"
+          },
+          "default_probability": {
+            "type": "number",
+            "title": "Default Probability"
+          },
+          "risk_tier": {
+            "$ref": "#/components/schemas/RiskTier"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "view",
+          "energy_credit_score",
+          "default_probability",
+          "risk_tier",
+          "model_version",
+          "created_at"
+        ],
+        "title": "ScoreHistoryItem"
+      },
+      "ScoreOut": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Customer Id"
+          },
+          "view": {
+            "$ref": "#/components/schemas/ScoreView"
+          },
+          "default_probability": {
+            "type": "number",
+            "title": "Default Probability"
+          },
+          "energy_credit_score": {
+            "type": "integer",
+            "title": "Energy Credit Score"
+          },
+          "risk_tier": {
+            "$ref": "#/components/schemas/RiskTier"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "top_factors": {
+            "items": {
+              "$ref": "#/components/schemas/TopFactorOut"
+            },
+            "type": "array",
+            "title": "Top Factors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "view",
+          "default_probability",
+          "energy_credit_score",
+          "risk_tier",
+          "approved",
+          "model_version",
+          "top_factors"
+        ],
+        "title": "ScoreOut"
+      },
+      "ScoreRequest": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Customer Id"
+          },
+          "view": {
+            "$ref": "#/components/schemas/ScoreView",
+            "default": "pooled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id"
+        ],
+        "title": "ScoreRequest"
+      },
+      "ScoreView": {
+        "type": "string",
+        "enum": [
+          "solo",
+          "pooled"
+        ],
+        "title": "ScoreView",
+        "description": "The two cooperative views \u2014 the core differentiator.\n\n``SOLO``   \u2014 features from the home operator's partial history only.\n``POOLED`` \u2014 features from the full cooperative history."
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token"
+        ],
+        "title": "Token"
+      },
+      "TopFactorOut": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "contribution": {
+            "type": "number",
+            "title": "Contribution"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "label",
+          "value",
+          "contribution",
+          "direction"
+        ],
+        "title": "TopFactorOut"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "operator_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "role"
+        ],
+        "title": "UserCreate"
+      },
+      "UserOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "operator_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role",
+          "operator_id"
+        ],
+        "title": "UserOut"
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "platform_admin",
+          "operator_admin",
+          "operator_analyst",
+          "lender_viewer"
+        ],
+        "title": "UserRole",
+        "description": "RBAC roles. Drives authorisation in Stage 5."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

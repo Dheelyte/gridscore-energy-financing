@@ -1,0 +1,50 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyc
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.env
+.env.local
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+dist/
+build/
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+.eslintcache
+
+# ---- ML / MLflow ----
+mlruns/
+mlartifacts/
+*.pkl
+*.joblib
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# ---- Docker ----
+*.local
+
+# ---- Secrets ----
+*.pem
+*.key
+secrets.*
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/

@@ -1,0 +1,111 @@
+# =============================================================================
+# GridScore AI — single-host production-style stack.
+# A self-contained alternative to Render/Vercel for demos or VPS deploys.
+#   docker compose -f infra/docker-compose.prod.yml up -d
+#
+# Secrets MUST be supplied via an environment file (--env-file) or the host
+# environment; none are baked into this file.
+# =============================================================================
+name: gridscore-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: apply DB migrations, then exit. api/worker wait for it to succeed.
+  migrate:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      GRIDSCORE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      GRIDSCORE_SECRET_KEY: ${GRIDSCORE_SECRET_KEY:?set GRIDSCORE_SECRET_KEY}
+      GRIDSCORE_IDENTITY_HASH_SALT: ${GRIDSCORE_IDENTITY_HASH_SALT:?set salt}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      GRIDSCORE_ENV: production
+      GRIDSCORE_LOG_JSON: "true"
+      GRIDSCORE_SECRET_KEY: ${GRIDSCORE_SECRET_KEY:?set GRIDSCORE_SECRET_KEY}
+      GRIDSCORE_IDENTITY_HASH_SALT: ${GRIDSCORE_IDENTITY_HASH_SALT:?set salt}
+      GRIDSCORE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      GRIDSCORE_REDIS_URL: redis://redis:6379/0
+      GRIDSCORE_CORS_ORIGINS: ${GRIDSCORE_CORS_ORIGINS:-https://app.gridscore.ai}
+    # The SPA calls the API directly (VITE_API_BASE_URL), so it must be reachable.
+    ports:
+      - "${API_PORT:-8000}:8000"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: ["arq", "app.workers.main.WorkerSettings"]
+    environment:
+      GRIDSCORE_ENV: production
+      GRIDSCORE_LOG_JSON: "true"
+      GRIDSCORE_SECRET_KEY: ${GRIDSCORE_SECRET_KEY:?set GRIDSCORE_SECRET_KEY}
+      GRIDSCORE_IDENTITY_HASH_SALT: ${GRIDSCORE_IDENTITY_HASH_SALT:?set salt}
+      GRIDSCORE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      GRIDSCORE_REDIS_URL: redis://redis:6379/0
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:

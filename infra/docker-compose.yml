@@ -1,0 +1,114 @@
+# =============================================================================
+# GridScore AI — local development stack.
+#   docker compose -f infra/docker-compose.yml up --build
+#
+# Brings up: postgres, redis, mlflow, api, worker (placeholder), frontend.
+# All services share an .env at the repo root (copy from .env.example).
+# =============================================================================
+name: gridscore
+
+x-api-env: &api-env
+  GRIDSCORE_ENV: development
+  GRIDSCORE_LOG_JSON: "false"
+  GRIDSCORE_DATABASE_URL: postgresql+asyncpg://gridscore:gridscore@postgres:5432/gridscore
+  GRIDSCORE_REDIS_URL: redis://redis:6379/0
+  GRIDSCORE_MLFLOW_TRACKING_URI: http://mlflow:5000
+  GRIDSCORE_CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gridscore
+      POSTGRES_PASSWORD: gridscore
+      POSTGRES_DB: gridscore
+    ports:
+      # Override the host port if 5432 is taken: GRIDSCORE_PG_PORT=5533 docker compose up
+      - "${GRIDSCORE_PG_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gridscore -d gridscore"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${GRIDSCORE_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    command: >
+      mlflow server
+      --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflowdata:/mlflow
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:5000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      <<: *api-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Background worker placeholder. The arq worker entrypoint is implemented in
+  # arq background worker: processes batch ingestion jobs (Stage 6).
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: ["arq", "app.workers.main.WorkerSettings"]
+    environment:
+      <<: *api-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:
+  mlflowdata:

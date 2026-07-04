@@ -1,0 +1,86 @@
+# =============================================================================
+# Render Blueprint for GridScore AI.
+# Provisions: Postgres, Redis (Key Value), the API web service, and the worker.
+# The frontend deploys to Vercel (see docs/RUNBOOK.md); a Render static-site
+# alternative is included but commented.
+#
+# Secrets marked `sync: false` are entered in the Render dashboard, never here.
+# =============================================================================
+databases:
+  - name: gridscore-postgres
+    databaseName: gridscore
+    user: gridscore
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: keyvalue
+    name: gridscore-redis
+    plan: free
+    ipAllowList: [] # only internal services
+
+  - type: web
+    name: gridscore-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    # Apply DB migrations before each release is promoted to serve traffic.
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: GRIDSCORE_ENV
+        value: production
+      - key: GRIDSCORE_LOG_JSON
+        value: "true"
+      - key: GRIDSCORE_SECRET_KEY
+        sync: false
+      - key: GRIDSCORE_IDENTITY_HASH_SALT
+        sync: false
+      - key: GRIDSCORE_CORS_ORIGINS
+        sync: false
+      - key: GRIDSCORE_DATABASE_URL
+        fromDatabase:
+          name: gridscore-postgres
+          property: connectionString
+      - key: GRIDSCORE_REDIS_URL
+        fromService:
+          type: keyvalue
+          name: gridscore-redis
+          property: connectionString
+
+  - type: worker
+    name: gridscore-worker
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: arq app.workers.main.WorkerSettings
+    envVars:
+      - key: GRIDSCORE_ENV
+        value: production
+      - key: GRIDSCORE_LOG_JSON
+        value: "true"
+      - key: GRIDSCORE_SECRET_KEY
+        sync: false
+      - key: GRIDSCORE_IDENTITY_HASH_SALT
+        sync: false
+      - key: GRIDSCORE_DATABASE_URL
+        fromDatabase:
+          name: gridscore-postgres
+          property: connectionString
+      - key: GRIDSCORE_REDIS_URL
+        fromService:
+          type: keyvalue
+          name: gridscore-redis
+          property: connectionString
+
+# Frontend (alternative to Vercel):
+#  - type: web
+#    name: gridscore-frontend
+#    runtime: static
+#    buildCommand: cd frontend && npm ci && npm run build
+#    staticPublishPath: ./frontend/dist
+#    envVars:
+#      - key: VITE_API_BASE_URL
+#        sync: false

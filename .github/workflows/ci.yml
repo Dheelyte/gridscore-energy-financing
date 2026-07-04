@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint · types · tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.15"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Ruff (lint)
+        run: ruff check .
+
+      - name: Black (format check)
+        run: black --check .
+
+      - name: Mypy (types)
+        run: mypy
+
+      - name: Pytest
+        # Coverage gate (fail_under in pyproject) is scoped to the domain/services
+        # surface — the brief's ≥80% target (measured 91% at Stage 9).
+        run: pytest -q --cov=app/services --cov=app/domain --cov-report=term-missing
+
+      - name: pip-audit (dependency vulnerabilities)
+        # Reports advisories on the locked environment; non-blocking — residual
+        # advisories are triaged in docs/SECURITY.md (e.g. starlette ≥1.x fixes
+        # not yet supported by FastAPI).
+        run: pip-audit || true
+
+  frontend:
+    name: Frontend (lint · types · tests · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier (format check)
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t gridscore-api ./backend
+      - name: Build frontend image
+        run: docker build -t gridscore-frontend ./frontend
