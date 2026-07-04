@@ -30,6 +30,9 @@ mlruns/
 mlartifacts/
 *.pkl
 *.joblib
+# ...but DO ship the trained scoring model the API loads at runtime, so a clone
+# can build a working image without retraining.
+!backend/artifacts/scoring_model.joblib
 
 # ---- Editor / OS ----
 .vscode/

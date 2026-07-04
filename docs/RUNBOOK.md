@@ -115,23 +115,33 @@ Never commit them; `.env.example` holds placeholders only.
    **Project env var `VITE_API_BASE_URL`** to the Render API URL, then deploy.
 3. **CORS** — set `GRIDSCORE_CORS_ORIGINS` to the Vercel URL and redeploy the API.
 
-### B) Single host (docker-compose.prod)
+### B) Single host — the backend stack in one command (docker-compose.prod)
+
+`infra/docker-compose.prod.yml` runs **everything except the frontend** (which is
+on Vercel): Postgres, Redis, the API and worker — and it **migrates and seeds
+automatically**, so one command yields a fully demo-ready backend.
 
 ```bash
-cp .env.example .env.prod        # then fill in real secrets (see table above)
+cp .env.example .env.prod        # fill in the secrets (see table above)
 docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d --build
-#   order: postgres/redis healthy → migrate runs `alembic upgrade head` → api + worker start
+#   order: postgres/redis healthy → migrate (alembic upgrade head)
+#        → seed (python -m app.cli.seed: synthetic data + demo logins) → api + worker
 docker compose -f infra/docker-compose.prod.yml --env-file .env.prod ps
 ```
-API on `:8000` (`API_PORT` to override), SPA on `:8080`. Build the frontend with
-`VITE_API_BASE_URL` pointing at the host's public API URL.
 
-### Seed the deployed environment (optional, synthetic demo)
-
-Run the seed **against the deployed database** once, for a live demo (see the
-`seed_demo.py` section above; it resets by default — pass `--no-reset` to append).
-The borderline demo customer's identity hash is deterministic and documented in
-`docs/DEMO_SCRIPT.md`.
+- The API is published on `:8000` (`API_PORT` to override). Point the **Vercel**
+  app's `VITE_API_BASE_URL` at this host's public URL, and make sure
+  `GRIDSCORE_CORS_ORIGINS` includes the Vercel origin (it defaults to
+  `https://gridscore-energy-financing.vercel.app`).
+- `.env.prod` needs only the backend secrets — **no `VITE_API_BASE_URL`** here
+  (that's a Vercel build var).
+- Seed size is `SEED_CUSTOMERS` (default 1000). **Every `up` re-seeds** synthetic
+  demo data (incl. the demo login accounts) — safe and repeatable; never point it
+  at a database with real data. To skip re-seeding on a restart, use
+  `docker compose ... start` rather than `up`.
+- The trained scoring model ships **inside the image**
+  (`backend/artifacts/scoring_model.joblib`), so no training step is needed to
+  serve scores.
 
 ### Post-deploy smoke check
 

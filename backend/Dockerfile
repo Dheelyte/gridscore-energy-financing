@@ -33,8 +33,10 @@ RUN useradd --create-home --uid 10001 appuser
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 COPY app ./app
-# alembic.ini is needed so `alembic upgrade head` can run at deploy time.
+# alembic.ini is needed so `alembic upgrade head` can run at deploy time;
+# artifacts/ carries the trained scoring model the API loads at startup.
 COPY alembic.ini pyproject.toml README.md ./
+COPY artifacts ./artifacts
 
 USER appuser
 EXPOSE 8000

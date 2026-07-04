@@ -5,6 +5,24 @@ Running log of non-trivial architectural decisions. Newest first. Each entry:
 
 ---
 
+## ADR-0031 — Backend deploys as one self-seeding compose; frontend on Vercel
+**Date:** 2026-07-04 · **Stage:** 10 (post-hoc)
+**Context:** The demo frontend lives on Vercel, so the single-host compose only
+needs the **backend**. For a one-command deploy to actually serve the demo, three
+gaps had to close: the trained model was git-ignored (`*.joblib`) and not copied
+into the image; the seed script lived at repo root, outside the backend build
+context (so it couldn't run in-container); and the compose still built a frontend.
+**Decision:** `infra/docker-compose.prod.yml` now runs **backend-only** (Postgres,
+Redis, migrate, **seed**, api, worker) and **auto-migrates + auto-seeds** on `up`,
+so it comes up demo-ready. The seed logic moved into the package
+(`app.cli.seed`, run as `python -m app.cli.seed`); `scripts/seed_demo.py` is a thin
+wrapper. The scoring model is committed (`.gitignore` exception) and `COPY`d into
+the image. CORS defaults to the Vercel origin.
+**Consequences:** `docker compose -f infra/docker-compose.prod.yml up -d --build`
+yields a working, seeded API with demo logins and live scoring — point Vercel's
+`VITE_API_BASE_URL` at it. `up` re-seeds synthetic data each time (safe for demos,
+not for real data). The committed model (~465 KB) means no training step to deploy.
+
 ## ADR-0030 — Decision threshold set near the base default rate (0.25 → 0.12)
 **Date:** 2026-07-02 · **Stage:** 10 (post-hoc correction)
 **Context:** The default approve/reject boundary was `decision_threshold = 0.25`,

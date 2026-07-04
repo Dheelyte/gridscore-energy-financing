@@ -1,10 +1,21 @@
 # =============================================================================
-# GridScore AI — single-host production-style stack.
-# A self-contained alternative to Render/Vercel for demos or VPS deploys.
-#   docker compose -f infra/docker-compose.prod.yml up -d
+# GridScore AI — backend stack (everything EXCEPT the frontend).
 #
-# Secrets MUST be supplied via an environment file (--env-file) or the host
-# environment; none are baked into this file.
+# The frontend is deployed separately on Vercel and points at this API via its
+# VITE_API_BASE_URL. This compose brings up Postgres, Redis, the API and worker,
+# and runs migrations + synthetic seeding automatically — so one command yields
+# a fully demo-ready backend:
+#
+#   cp .env.example .env.prod        # fill in the secrets below
+#   docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# The API is published on ${API_PORT:-8000}. Point the Vercel app's
+# VITE_API_BASE_URL at this host's public URL and set GRIDSCORE_CORS_ORIGINS to
+# the Vercel origin. Secrets are supplied via --env-file / the host environment;
+# none are baked into this file.
+#
+# NOTE: `up` (re)seeds SYNTHETIC demo data (incl. the demo login accounts). It is
+# safe and repeatable; do not point this at a database with real data.
 # =============================================================================
 name: gridscore-prod
 
@@ -36,7 +47,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # One-shot: apply DB migrations, then exit. api/worker wait for it to succeed.
+  # One-shot: apply DB migrations, then exit. Everything else waits for success.
   migrate:
     build:
       context: ../backend
@@ -51,6 +62,24 @@ services:
       postgres:
         condition: service_healthy
 
+  # One-shot: load the synthetic demo scenario + demo login accounts, then exit.
+  # Runs after migrations; the API waits for it so first requests see data.
+  seed:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: ["python", "-m", "app.cli.seed", "--customers", "${SEED_CUSTOMERS:-1000}"]
+    environment:
+      GRIDSCORE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      GRIDSCORE_SECRET_KEY: ${GRIDSCORE_SECRET_KEY:?set GRIDSCORE_SECRET_KEY}
+      GRIDSCORE_IDENTITY_HASH_SALT: ${GRIDSCORE_IDENTITY_HASH_SALT:?set salt}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
   api:
     build:
       context: ../backend
@@ -62,8 +91,9 @@ services:
       GRIDSCORE_IDENTITY_HASH_SALT: ${GRIDSCORE_IDENTITY_HASH_SALT:?set salt}
       GRIDSCORE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       GRIDSCORE_REDIS_URL: redis://redis:6379/0
-      GRIDSCORE_CORS_ORIGINS: ${GRIDSCORE_CORS_ORIGINS:-https://app.gridscore.ai}
-    # The SPA calls the API directly (VITE_API_BASE_URL), so it must be reachable.
+      # Allow the deployed frontend origin(s) to call this API (comma-separated).
+      GRIDSCORE_CORS_ORIGINS: ${GRIDSCORE_CORS_ORIGINS:-https://gridscore-energy-financing.vercel.app}
+    # Published so the Vercel SPA (and judges) can reach the API directly.
     ports:
       - "${API_PORT:-8000}:8000"
     restart: unless-stopped
@@ -73,6 +103,8 @@ services:
       redis:
         condition: service_healthy
       migrate:
+        condition: service_completed_successfully
+      seed:
         condition: service_completed_successfully
 
   worker:
@@ -93,18 +125,6 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
-
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-    depends_on:
-      - api
 
 volumes:
   pgdata:
