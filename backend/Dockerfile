@@ -11,7 +11,11 @@ COPY --from=ghcr.io/astral-sh/uv:0.9.15 /uv /uvx /bin/
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
-    UV_PROJECT_ENVIRONMENT=/opt/venv
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    # Large ML wheels (scipy/pyarrow/llvmlite) over a slow link can exceed uv's
+    # default 30s per-download timeout; give them room so the build is reliable.
+    UV_HTTP_TIMEOUT=180 \
+    UV_CONCURRENT_DOWNLOADS=8
 
 WORKDIR /app
 
