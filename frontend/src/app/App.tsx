@@ -2,18 +2,19 @@ import { Activity, Network, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL, USE_MOCK } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
-type ApiState = "checking" | "online" | "offline";
+type ApiState = "checking" | "online" | "offline" | "demo";
 
 /** Landing page for the Stage 0 skeleton. Pings the backend so the wired
- *  full-stack (frontend -> API) is visible at a glance. */
+ *  full-stack (frontend -> API) is visible at a glance. In mock mode there is
+ *  no backend, so we show a "Demo mode" badge instead of pinging. */
 export default function App() {
-  const [api, setApi] = useState<ApiState>("checking");
+  const [api, setApi] = useState<ApiState>(USE_MOCK ? "demo" : "checking");
 
   useEffect(() => {
+    if (USE_MOCK) return;
     const controller = new AbortController();
     fetch(`${API_BASE_URL}/health`, { signal: controller.signal })
       .then((r) => setApi(r.ok ? "online" : "offline"))
@@ -48,11 +49,13 @@ export default function App() {
             <a href="/console">
               <Button size="lg">Open the operator console</Button>
             </a>
-            <a href={`${API_BASE_URL}/docs`} target="_blank" rel="noreferrer">
-              <Button size="lg" variant="outline">
-                API docs
-              </Button>
-            </a>
+            {!USE_MOCK && (
+              <a href={`${API_BASE_URL}/docs`} target="_blank" rel="noreferrer">
+                <Button size="lg" variant="outline">
+                  API docs
+                </Button>
+              </a>
+            )}
           </div>
 
           <div className="mt-16 grid gap-4 sm:grid-cols-3">
@@ -84,11 +87,17 @@ export default function App() {
 }
 
 function ApiBadge({ state }: { state: ApiState }) {
-  const label = { checking: "Checking API…", online: "API online", offline: "API offline" }[state];
+  const label = {
+    checking: "Checking API…",
+    online: "API online",
+    offline: "API offline",
+    demo: "Demo mode · mock data",
+  }[state];
   const dot = {
     checking: "bg-muted-foreground",
     online: "bg-primary",
     offline: "bg-destructive",
+    demo: "bg-primary",
   }[state];
   return (
     <span className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">

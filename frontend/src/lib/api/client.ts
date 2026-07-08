@@ -4,9 +4,14 @@
  * Types flow from the backend's OpenAPI document (run `npm run gen:api` after a
  * backend change), so request/response shapes cannot silently drift from the API.
  */
+import { mockApi } from "./mock";
 import type { paths } from "./schema";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+
+/** Run entirely on client-side mock data (no backend). Default ON so the app is
+ *  a self-contained demo; set `VITE_USE_MOCK=false` to talk to a real backend. */
+export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== "false";
 
 export interface ApiErrorBody {
   error: { code: string; message: string; details?: Record<string, unknown> };
@@ -78,7 +83,7 @@ export type ActiveModel = paths["/v1/admin/model"]["get"]["responses"]["200"]["c
 export type ScoreView = "solo" | "pooled";
 export type IngestEvent = Record<string, unknown>;
 
-export const api = {
+const realApi = {
   async login(email: string, password: string): Promise<Token> {
     const body = new URLSearchParams({ username: email, password });
     const token = await request<Token>("/v1/auth/login", {
@@ -138,3 +143,7 @@ export const api = {
       method: "POST",
     }),
 };
+
+// When VITE_USE_MOCK is not "false", every call is served by the self-contained
+// client-side mock (no backend). The mock implements the same surface as realApi.
+export const api: typeof realApi = USE_MOCK ? (mockApi as typeof realApi) : realApi;
