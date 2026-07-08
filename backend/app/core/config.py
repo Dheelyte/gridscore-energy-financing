@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from enum import StrEnum
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Environment(StrEnum):
@@ -42,7 +43,10 @@ class Settings(BaseSettings):
     # ---- API server ----
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    cors_origins: list[str] = Field(
+    # NoDecode: keep pydantic-settings from JSON-decoding the env value so the
+    # comma-separated string reaches `_split_cors` below instead of raising in
+    # the env source. (Without it, GRIDSCORE_CORS_ORIGINS=a,b fails to parse.)
+    cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:5173", "http://localhost:3000"]
     )
 
